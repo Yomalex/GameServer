@@ -1,0 +1,7 @@
+; Cargar el plugin para visualizar la consola
+Container->Load('console.dll')
+CONS->Message(0, 'Josmer', 'Todo un QA :D')
+; Cargar el plugin para servidor TCP
+Container->Load('iocp.dll')
+; Decir le al plugin que Escuche el puerto 27015
+IOCP->Listen(27015)
