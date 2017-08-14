@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "Loader.h"
 #include <Windows.h>
-
+#include <iostream>
+#include <regex>
 
 CLoader::CLoader()
 {
@@ -29,8 +30,13 @@ PRESULT CLoader::Load(const char * szFileName)
 		FreeLibrary(pInfo.hModule);
 		return P_ERROR;
 	}
+
 	strcpy_s(pInfo.Name, pInfo.pLink->GetPluginName());
 	pInfo.pLink->Parent(this);
+
+	//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	std::cout << "Named: " << pInfo.Name << std::endl;
 
 	// Creando lista de funciones
 	pInfo.pLink->ProcList(pInfo.ProcList);
@@ -63,9 +69,7 @@ PRESULT CLoader::Load(const char * szFileName)
 	}
 
 	// Inicializando Plugin
-	pInfo.pLink->Start();
-
-	return P_OK;
+	return pInfo.pLink->Start();
 }
 
 PRESULT CLoader::Link(const char * szEvent, CPlugin * plg, int iCBIndex)
@@ -159,6 +163,113 @@ PRESULT CLoader::Free()
 		FreeLibrary(this->Plugins[i].hModule);
 	}
 
+	return P_OK;
+}
+
+std::cmatch cm;
+std::regex e("(.+)(?:->)(.+)(?:\\()(.+)(?:\\))(?:\\s*)(?:;*)(?:\\s*)(.*)(?:\\n?)$");
+std::regex comment("(?:\\s?)(?:;)(?:\\s?)(.*)$(?:\\n?)");
+PRESULT CLoader::Command(const char * szLine)
+{
+	// Extraccion de Comentarios
+	if (std::regex_match(szLine, cm, comment))
+	{
+		// Mostrar el comentario en Verde con fondo negro
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
+		std::cout << cm[1].str() << std::endl;
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+		return P_OK;
+	}
+	// Extraccion de argumentos para hacer llamadas en los plugin
+	if (std::regex_match(szLine, cm, e))//"Plugin->Function(ArgumentList)"
+	{
+		if (cm[1].compare("Container") == 0)
+		{
+			if (cm[2].compare("Load") == 0)
+			{
+				std::string arguments(cm[3].str());
+				std::string filename;
+				filename.assign(arguments.begin() + 1, arguments.end() - 1);
+
+				std::cout << "Loading plugin '" << filename.c_str() << "'";
+				if (strlen(cm[4].str().c_str()) > 1)
+				{
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
+					std::cout << " " << cm[4].str();
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+				}
+
+				std::cout << std::endl;
+
+				if (this->Load(filename.c_str()) != P_OK)
+				{
+					std::cout << "Error Starting plugin" << std::endl;
+				}
+			}
+		}
+		else
+		{
+			CVar Args[10];
+			int argCount = 10;
+			size_t lastFind = 0, prevFind = 0;
+
+			//parse args
+			std::string arguments(cm[3].str());
+			std::string argList[10];
+			std::cmatch cmArg;
+			std::regex eArgs("(?:\\s*)'(.+?)'");
+			std::regex eArgs2("(?:\\s*)''");
+
+			for (register int i = 0; i < 10; i++)
+			{
+				if ((lastFind = arguments.find(',', lastFind + 1)) != std::string::npos)
+				{
+					argList[i].assign(arguments.begin() + prevFind, arguments.begin() + lastFind);
+					prevFind = lastFind + 1;
+				}
+				else
+				{
+					argList[i].assign(arguments.begin() + prevFind, arguments.end());
+					argCount = i + 1;
+					break;
+				}
+			}
+
+			std::vector<void*> GlobalPointer;
+
+			for (register int i = 0; i < argCount; i++)
+			{
+				if (std::regex_match(argList[i].c_str(), cmArg, eArgs))
+				{
+					char * pLine = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 1024);
+					strcpy_s(pLine, 1024, cmArg[1].str().c_str());
+					Args[i] = pLine;
+					GlobalPointer.push_back(pLine);
+				}
+				else if (std::regex_match(argList[i].c_str(), cmArg, eArgs2))
+				{
+					Args[i] = "";
+				}
+				else
+				{
+					Args[i] = (float)atof(argList[i].c_str());
+				}
+			}
+
+			if (this->invoke(cm[1].str().c_str(), cm[2].str().c_str(), Args, argCount) != P_OK)
+			{
+				std::cout << "Error calling:" << cm[1].str().c_str() << "::" << cm[2].str().c_str() << std::endl;
+			}
+			for (register unsigned int i = 0; i < GlobalPointer.size(); i++)
+			{
+				HeapFree(GetProcessHeap(), 0, GlobalPointer[i]);
+			}
+		}
+	}
+	else
+	{
+		return P_ERROR;
+	}
 	return P_OK;
 }
 

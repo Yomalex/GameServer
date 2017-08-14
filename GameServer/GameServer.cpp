@@ -5,7 +5,8 @@
 #include "GameServer.h"
 #include <iostream>
 #include <string>
-#include <regex>
+
+using namespace std;
 
 CLoader * Container;
 
@@ -32,6 +33,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: colocar código aquí.
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
+	freopen("CONIN$", "rt", stdin);
 
     // Inicializar cadenas globales
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -48,93 +52,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Container = new CLoader();
 
-	std::cmatch cm;
-	std::regex e("(.+?)(->)(.+?)(\\()(.+?)(\\))(\\n?)");
-	
-
 	FILE* fp;
 	fopen_s(&fp, "Main.script", "r");
 
+	UINT uiLine = 0;
 	if (fp != nullptr) {
 		char szLine[1024];
 		while (fgets(szLine, sizeof(szLine), fp) != nullptr)
 		{
-			std::string isComm(szLine);
-			if (isComm.find(';') != std::string::npos)
+			uiLine++;
+			// Extraccion de Comentarios
+
+			if (Container->Command(szLine))
 			{
-				continue;
-			}
-			if (std::regex_match(szLine, cm, e))//"Plugin->Function(ArgumentList)"
-			{
-				if (cm.size() < 6)
-				{
-					// syntax error
-				}
-				if (cm[1].compare("Container") == 0)
-				{
-					if (cm[3].compare("Load") == 0)
-					{
-						std::string arguments(cm[5].str());
-						std::string filename;
-						filename.assign(arguments.begin() + 1, arguments.end() - 1);
-						Container->Load(filename.c_str());
-					}
-				}
-				else
-				{
-					CVar Args[10];
-					int argCount = 10;
-					size_t lastFind = 0, prevFind = 0;
-
-					//parse args
-					std::string arguments(cm[5].str());
-					std::string argList[10];
-					std::cmatch cmArg;
-					std::regex eArgs("(?:\\s*)'(.+?)'");
-					std::regex eArgs2("(?:\\s*)''");
-
-					for (register int i = 0; i < 10; i++)
-					{
-						if ((lastFind = arguments.find(',', lastFind+1)) != std::string::npos)
-						{
-							argList[i].assign(arguments.begin() + prevFind, arguments.begin() + lastFind);
-							prevFind = lastFind+1;
-						}
-						else
-						{
-							argList[i].assign(arguments.begin() + prevFind, arguments.end());
-							argCount = i + 1;
-							break;
-						}
-					}
-
-					std::vector<void*> GlobalPointer;
-
-					for (register int i = 0; i < argCount; i++)
-					{
-						if (std::regex_match(argList[i].c_str(), cmArg, eArgs))
-						{
-							char * pLine = (char*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 1024);
-							strcpy_s(pLine, 1024, cmArg[1].str().c_str());
-							Args[i] = pLine;
-							GlobalPointer.push_back(pLine);
-						}
-						else if (std::regex_match(argList[i].c_str(), cmArg, eArgs2))
-						{
-							Args[i] = "";
-						}
-						else
-						{
-							Args[i] = (float)atof(argList[i].c_str());
-						}
-					}
-
-					Container->invoke(cm[1].str().c_str(), cm[3].str().c_str(), Args, argCount);
-					for (register unsigned int i = 0; i < GlobalPointer.size(); i++)
-					{
-						HeapFree(GetProcessHeap(), 0, GlobalPointer[i]);
-					}
-				}
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+				std::cout << "Syntax error on line " << uiLine << " of Main.script: '" << szLine << "'" << endl;
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 			}
 		}
 	}

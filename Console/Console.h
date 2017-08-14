@@ -15,5 +15,9 @@ public:
 	// Console
 	void OnError(const char * szPlugin, const char * szFile, unsigned int Line, DWORD ErrorNo, const char * szErrString);
 	void Message(DWORD dwAttr, const char * szPlugin, const char * szMessage);
+
+	friend DWORD WINAPI th_ConsoleInput(CConsole * con);
+private:
+	HANDLE hThread;
 };
 

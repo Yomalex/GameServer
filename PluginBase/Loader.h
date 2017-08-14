@@ -5,6 +5,7 @@
 #endif
 
 #pragma once
+
 #include "Var.h"
 #include "Definitions.h"
 #include "Plugin.h"
@@ -42,6 +43,7 @@ public:
 	PRESULT invoke(const char * szPlugin, const char * szFunction, CVar * Args, int ArgCount);
 	PRESULT Free(const char * szPluginName);
 	PRESULT Free();
+	PRESULT Command(const char * szCommand);
 
 private:
 	PRESULT Link(const char * szEvent, CPlugin * plg, int iCBIndex);

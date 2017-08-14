@@ -1,7 +1,12 @@
+; Script para GameServer de MuOnline
+; sistema basado en plugins
+; Developer: Camejo Yomar
+; Fecha: 08/14/2017
+; 
 ; Cargar el plugin para visualizar la consola
 Container->Load('console.dll')
-CONS->Message(0, 'Josmer', 'Todo un QA :D')
+CONSOLE->Message(7, 'CONSOLE', 'Inicializado el plugin de consola')
 ; Cargar el plugin para servidor TCP
-Container->Load('iocp.dll')
-; Decir le al plugin que Escuche el puerto 27015
+Container->Load('iocp.dll')              
+; Decirle al plugin que Escuche el puerto 27015
 IOCP->Listen(27015)

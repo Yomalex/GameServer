@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "../PluginBase/Loader.h"
 #include "Console.h"
 #include <iostream>
 
@@ -16,11 +17,21 @@ char * szProcList[] = {
 	nullptr
 };
 
+DWORD WINAPI th_ConsoleInput(CConsole * con)
+{
+	char szLine[1024];
+	while (true)
+	{
+		std::cin.getline(szLine, sizeof(szLine));
+		con->Loader->Command(szLine);
+	}
+}
+
 CConsole::CConsole()
 {
 	this->szCallBackListNames = ppChar2vpChar(szCallBacks);
 	this->szProcListNames = ppChar2vpChar(szProcList);
-	strcpy_s(this->m_szName, "CONS");
+	strcpy_s(this->m_szName, "CONSOLE");
 }
 
 
@@ -30,11 +41,15 @@ CConsole::~CConsole()
 
 PRESULT CConsole::Start()
 {
-	if (!AllocConsole()) return P_ERROR;
+	if (AllocConsole())
+	{
+		freopen("CONOUT$", "wt", stdout);
+		freopen("CONIN$", "rt", stdin);
+	}
 
-	freopen("CONOUT$", "wt", stdout);
-	freopen("CONIN$", "rt", stdin);
 	SetConsoleTitleA("Console");
+
+	hThread = CreateThread(nullptr, NULL, (LPTHREAD_START_ROUTINE)th_ConsoleInput, this, 0, nullptr);
 
 	return P_OK;
 }
@@ -57,13 +72,14 @@ PRESULT CConsole::invoke(int proc, CVar * ArgList, int ArgCount)
 
 PRESULT CConsole::Stop()
 {
+	TerminateThread(hThread, 0);
 	if (!FreeConsole()) return P_ERROR;
 	return P_OK;
 }
 
 void CConsole::OnError(const char * szPlugin, const char * szFile, unsigned int Line, DWORD ErrorNo, const char * szErrString)
 {
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
 
 	std::string file(szFile);
 	size_t backslash = file.rfind('/');
@@ -75,15 +91,13 @@ void CConsole::OnError(const char * szPlugin, const char * szFile, unsigned int 
 	{
 		file.erase(file.begin(), file.begin() + backslash + 1);
 	}
-	char szOutput[1024];
-	sprintf(szOutput, "%s_%s (%d) Error(%d)", szPlugin, file.c_str(), Line, ErrorNo);
-	std::cout << szOutput;
+	printf("%s_%s (%d) Error(%d)", szPlugin, file.c_str(), Line, ErrorNo);
 	if (szErrString) std::cout << szErrString << std::endl;
 	else std::cout << std::endl;
 }
 
 void CConsole::Message(DWORD dwAttr, const char * szPlugin, const char * szMessage)
 {
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), dwAttr);
 	std::cout << szPlugin << ": " << szMessage << std::endl;
 }

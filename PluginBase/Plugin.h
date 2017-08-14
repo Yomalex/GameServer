@@ -18,6 +18,7 @@
 #define CALLBACK_INDEX(x) (x+CALLBACK_START_INDEX)
 // Clase base del plugin
 
+class CLoader;
 class CPlugin;
 
 struct _tagCBInfo
@@ -25,7 +26,6 @@ struct _tagCBInfo
 	CPlugin * pPlugin;
 	int Proc;
 };
-class CLoader;
 
 class CPlugin
 {
@@ -60,3 +60,4 @@ protected:
 // Util
 
 std::vector<char *> ppChar2vpChar(char ** szStringArray);
+
