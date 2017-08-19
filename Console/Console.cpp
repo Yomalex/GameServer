@@ -32,6 +32,7 @@ CConsole::CConsole()
 	this->szCallBackListNames = ppChar2vpChar(szCallBacks);
 	this->szProcListNames = ppChar2vpChar(szProcList);
 	strcpy_s(this->m_szName, "CONSOLE");
+	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 0, 0);
 }
 
 

@@ -3,10 +3,12 @@
 ; Developer: Camejo Yomar
 ; Fecha: 08/14/2017
 ; 
-; Cargar el plugin para visualizar la consola
+; Cargar el plugin para agregar funciones a la consola
 Container->Load('console.dll')
 CONSOLE->Message(7, 'CONSOLE', 'Inicializado el plugin de consola')
 ; Cargar el plugin para servidor TCP
 Container->Load('iocp.dll')              
 ; Decirle al plugin que Escuche el puerto 27015
 IOCP->Listen(27015)
+; Cargar el plugin MuCore
+Container->Load('mucore.dll')

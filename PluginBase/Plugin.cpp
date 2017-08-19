@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Plugin.h"
+#include "Loader.h"
 
 char * szEmptyList[1] = { nullptr };
 
@@ -76,6 +77,18 @@ PRESULT CPlugin::UnregCallBacks(CPlugin * plg)
 		}
 	}
 
+	return P_OK;
+}
+
+PRESULT CPlugin::FindDependency(const char * szPlugin, PlgVer Version)
+{
+	if (this->Loader->PluginVersion(szPlugin) < Version.ulVersion)
+	{
+		char szString[100];
+		sprintf_s(szString, "Se requiere el plugin %s version %s+", szPlugin, Version.szPluginVersion);
+		MessageBoxA(NULL, szString, this->m_szName, MB_ICONERROR);
+		return P_MISSING_DEPENDENCY;
+	}
 	return P_OK;
 }
 

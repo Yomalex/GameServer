@@ -33,6 +33,7 @@ public:
 	operator unsigned int();
 	operator int();
 	operator long();
+	operator unsigned long() { return m_MixedVar.Interger; }
 	operator float();
 private:
 	VarType m_Type;
@@ -40,7 +41,7 @@ private:
 	{
 		char * pString;
 		void * Pointer;
-		long long Interger;
+		long Interger;
 		double Real;
 	} m_MixedVar;
 };

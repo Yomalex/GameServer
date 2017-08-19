@@ -42,13 +42,13 @@ DWORD WINAPI th_Accept(CIocp * iocp)
 		pAccepted->s = accept(iocp->m_sServer, (sockaddr*)&Incoming, &size);
 		if (pAccepted->s == INVALID_SOCKET) continue;
 		pAccepted->IPAddress = Incoming.sin_addr.S_un.S_addr;
+		pAccepted->LifeTime = GetTickCount();
 
 		CreateIoCompletionPort((HANDLE)pAccepted->s, iocp->m_hIocp, (ULONG_PTR)pAccepted, 0);
 
 		char * szAddr = inet_ntoa(Incoming.sin_addr);
 		size_t len = strlen(szAddr) + 1;
-
-		Args[0] = 0;
+		Args[0] = pAccepted->ID;
 		Args[1] = (char*)malloc(len);
 		strcpy_s(Args[1], len, szAddr);
 
@@ -122,6 +122,11 @@ DWORD WINAPI th_Worker(CIocp * iocp)
 			}
 		}
 
+		if (!m_dwBytesTransferred)
+		{
+			iocp->Close(client->ID);
+		}
+
 		if (m_lpOverlapped == &client->wsaOVI) // Se recibio un paquete
 		{
 			Args[0] = client->ID;
@@ -166,6 +171,7 @@ CIocp::CIocp()
 {
 	ZeroMemory(this->m_szName, sizeof(this->m_szName));
 	strcpy_s(this->m_szName, "IOCP");
+	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 0, 0);
 	this->szEventListNames = ppChar2vpChar(szEvents);
 	//this->szCallBackListNames = szCallBacks;
 	this->szProcListNames = ppChar2vpChar(szProcs);
@@ -266,6 +272,8 @@ bool CIocp::Listen(short wPort)
 
 void CIocp::Close(UINT ID)
 {
+	if (this->m_ClientList[ID].s == INVALID_SOCKET) return;
+
 	CVar Args[4];
 	Args[0] = ID;
 	Args[1] = GetTickCount() - this->m_ClientList[ID].LifeTime;
@@ -273,6 +281,7 @@ void CIocp::Close(UINT ID)
 	this->DispCallBack(1, Args, 2);
 	closesocket(this->m_ClientList[ID].s);
 	this->m_ClientList[ID].s = INVALID_SOCKET;
+	this->LastFree = min(this->LastFree, ID);
 }
 
 void CIocp::Send(UINT ID, void * Pointer, UINT uiLen)

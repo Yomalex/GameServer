@@ -41,9 +41,12 @@ public:
 
 	PRESULT Load(const char * szFileName);
 	PRESULT invoke(const char * szPlugin, const char * szFunction, CVar * Args, int ArgCount);
+	PRESULT invoke(const char * szPlugin, const char * szFunction, int arg, ...);
 	PRESULT Free(const char * szPluginName);
 	PRESULT Free();
 	PRESULT Command(const char * szCommand);
+
+	DWORD PluginVersion(const char * szPlugin);
 
 private:
 	PRESULT Link(const char * szEvent, CPlugin * plg, int iCBIndex);

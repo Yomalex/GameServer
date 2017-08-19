@@ -36,7 +36,7 @@ PRESULT CLoader::Load(const char * szFileName)
 
 	//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-	std::cout << "Named: " << pInfo.Name << std::endl;
+	std::cout << " - Named: " << pInfo.Name << std::endl << " - Version: " << pInfo.pLink->GetPluginVersionString() << std::endl;
 
 	// Creando lista de funciones
 	pInfo.pLink->ProcList(pInfo.ProcList);
@@ -128,6 +128,16 @@ PRESULT CLoader::invoke(const char * szPlugin, const char * szFunction, CVar * A
 	return P_INVALID_ARG;
 }
 
+PRESULT CLoader::invoke(const char * szPlugin, const char * szFunction, int arg, ...)
+{
+	CVar AList[10];
+	va_list ap;
+	va_start(ap, arg);
+	for (register int i = 0; i < arg; i++) AList[i] = va_arg(ap, void*);
+	va_end(ap);
+	return this->invoke(szPlugin, szFunction, AList, arg);
+}
+
 PRESULT CLoader::Free(const char * szPluginName)
 {
 	__int64 UID = *(__int64*)szPluginName;
@@ -152,7 +162,7 @@ PRESULT CLoader::Free(const char * szPluginName)
 
 PRESULT CLoader::Free()
 {
-	for (register UINT i = 0; i < this->Plugins.size(); i++)
+	for (register int i = this->Plugins.size()-1; i >= 0; i--)
 	{
 		for (register UINT j = 0; j < this->Plugins[i].CBacList.size(); j++)
 		{
@@ -217,9 +227,8 @@ PRESULT CLoader::Command(const char * szLine)
 			std::string arguments(cm[3].str());
 			std::string argList[10];
 			std::cmatch cmArg;
-			std::regex eArgs("(?:\\s*)'(.+?)'");
-			std::regex eArgs2("(?:\\s*)''");
-
+			std::regex eArgs("(?:\\s*)'(.*)'");
+      
 			for (register int i = 0; i < 10; i++)
 			{
 				if ((lastFind = arguments.find(',', lastFind + 1)) != std::string::npos)
@@ -246,10 +255,6 @@ PRESULT CLoader::Command(const char * szLine)
 					Args[i] = pLine;
 					GlobalPointer.push_back(pLine);
 				}
-				else if (std::regex_match(argList[i].c_str(), cmArg, eArgs2))
-				{
-					Args[i] = "";
-				}
 				else
 				{
 					Args[i] = (float)atof(argList[i].c_str());
@@ -271,6 +276,21 @@ PRESULT CLoader::Command(const char * szLine)
 		return P_ERROR;
 	}
 	return P_OK;
+}
+
+DWORD CLoader::PluginVersion(const char * szPlugin)
+{
+	static char szPlugincpy[8];
+	ZeroMemory(szPlugincpy, 8);
+	strcpy_s(szPlugincpy, szPlugin);
+
+	long long UID = *(long long *)szPlugincpy;
+
+	for (register UINT i = 0; i < this->Plugins.size(); i++)
+	{
+		if (this->Plugins[i].UID == UID) return this->Plugins[i].pLink->GetPluginVersion();
+	}
+	return 0;
 }
 
 PLUGIN_INFO* CLoader::GetPluginInfo(const char * szPlugin)
