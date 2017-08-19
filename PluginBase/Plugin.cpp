@@ -80,6 +80,26 @@ PRESULT CPlugin::UnregCallBacks(CPlugin * plg)
 	return P_OK;
 }
 
+FlexVar & CPlugin::Property(const char * szProperty)
+{
+	static char szName[20];
+	ZeroMemory(szName, 20);
+	strcpy_s(szName, szProperty);
+
+	for (register unsigned int i = 0; i < this->propertyList.size(); i++)
+	{
+		if (*(DWORD*)szName == *(DWORD*)this->propertyList[i].szName
+			&& !strcmp(szName, this->propertyList[i].szName))
+			return this->propertyList[i].Value;
+	}
+	
+	_Property prop;
+	strcpy_s(prop.szName, szProperty);
+	this->propertyList.push_back(prop);
+
+	return this->propertyList.back().Value;
+}
+
 PRESULT CPlugin::FindDependency(const char * szPlugin, PlgVer Version)
 {
 	if (this->Loader->PluginVersion(szPlugin) < Version.ulVersion)

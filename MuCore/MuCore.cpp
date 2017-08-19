@@ -28,6 +28,8 @@ CMuCore::CMuCore()
 	this->szProcListNames = ppChar2vpChar(szProc);
 	strcpy_s(this->m_szName, "MuCore");
 	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 0, 0);
+
+	this->Property("CliVersion") = "10701";
 }
 
 
@@ -107,6 +109,7 @@ PRESULT CMuCore::OnDisconnect(DWORD dwIndex, DWORD dwLifeTime)
 	return P_OK;
 }
 
+#pragma pack(push,1)
 struct PMSG_JOINRESULT
 {
 	//WZ_HEAD_B h; // C1:F1
@@ -117,6 +120,7 @@ struct PMSG_JOINRESULT
 	BYTE NumberL; // 6
 	BYTE CliVersion[5]; // 7
 };
+#pragma pack(pop)
 
 // Envio de respuesta de union al servidor
 void CMuCore::SCPJoinResult(int iID, int result)
@@ -127,7 +131,7 @@ void CMuCore::SCPJoinResult(int iID, int result)
 	pack->result = result;
 	pack->NumberH = (iID & 0xff00) >> 8;
 	pack->NumberL = iID & 0xff;
-	//memcpy(JoinResult.CliVersion, ClientVersion, 5);
+	memcpy(pack->CliVersion, this->Property("CliVersion"), 5);
 
 	this->Loader->invoke("IOCP", "Send", 3, iID, (char*)pack, pack.size());
 }

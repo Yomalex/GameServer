@@ -96,6 +96,14 @@ struct PlgVer
 	}
 };
 
+#include "FlexVar.h"
+
+struct _Property
+{
+	char szName[20];
+	FlexVar Value;
+};
+
 class CPlugin
 {
 public:
@@ -113,6 +121,7 @@ public:
 	PRESULT RegCallBack(unsigned int iEvent, CPlugin * plg, int iCBIndex);
 	PRESULT DispCallBack(unsigned int iEvent, CVar * Args, int ArgsCount);
 	PRESULT UnregCallBacks(CPlugin * plg);
+	FlexVar& Property(const char * szProperty);
 	const char * GetPluginName() { return this->m_szName; }
 	unsigned long GetPluginVersion() { return this->m_dwVersion; }
 	const char * GetPluginVersionString() { return this->m_dwVersion; }
@@ -127,6 +136,8 @@ protected:
 	std::vector<char *> szProcListNames;
 
 	std::vector<std::vector<_tagCBInfo>> CallBacks;
+
+	std::vector<_Property> propertyList;
 
 	PRESULT FindDependency(const char * szPlugin, PlgVer Version);
 };

@@ -12,3 +12,4 @@ Container->Load('iocp.dll')
 IOCP->Listen(27015)
 ; Cargar el plugin MuCore
 Container->Load('mucore.dll')
+MuCore->CliVersion = 100718

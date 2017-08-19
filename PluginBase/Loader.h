@@ -31,6 +31,7 @@ struct EVENT_INFO
 	char * szEvent;
 };
 
+#include "FlexVar.h"
 class CLoader
 {
 	std::vector<PLUGIN_INFO> Plugins;
@@ -42,6 +43,7 @@ public:
 	PRESULT Load(const char * szFileName);
 	PRESULT invoke(const char * szPlugin, const char * szFunction, CVar * Args, int ArgCount);
 	PRESULT invoke(const char * szPlugin, const char * szFunction, int arg, ...);
+	FlexVar& property(const char * szPlugin, const char * szProperty);
 	PRESULT Free(const char * szPluginName);
 	PRESULT Free();
 	PRESULT Command(const char * szCommand);

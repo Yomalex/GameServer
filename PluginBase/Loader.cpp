@@ -138,6 +138,16 @@ PRESULT CLoader::invoke(const char * szPlugin, const char * szFunction, int arg,
 	return this->invoke(szPlugin, szFunction, AList, arg);
 }
 
+FlexVar& CLoader::property(const char * szPlugin, const char * szProperty)
+{
+	PLUGIN_INFO* pInfo = this->GetPluginInfo(szPlugin);
+	static FlexVar empty;
+
+	if (!pInfo) return empty;
+
+	return pInfo->pLink->Property(szProperty);
+}
+
 PRESULT CLoader::Free(const char * szPluginName)
 {
 	__int64 UID = *(__int64*)szPluginName;
@@ -178,6 +188,7 @@ PRESULT CLoader::Free()
 
 std::cmatch cm;
 std::regex e("(.+)(?:->)(.+)(?:\\()(.+)(?:\\))(?:\\s*)(?:;*)(?:\\s*)(.*)(?:\\n?)$");
+std::regex var("(?:\\s*)(.[^\\s]+)->(.[^\\s]+)(?:\\s*)=(?:\\s*)(.+)(?:\\n*)$");
 std::regex comment("(?:\\s?)(?:;)(?:\\s?)(.*)$(?:\\n?)");
 PRESULT CLoader::Command(const char * szLine)
 {
@@ -270,6 +281,13 @@ PRESULT CLoader::Command(const char * szLine)
 				HeapFree(GetProcessHeap(), 0, GlobalPointer[i]);
 			}
 		}
+	}
+	else if (std::regex_match(szLine, cm, var))
+	{
+		this->property(cm[1].str().c_str(), cm[2].str().c_str()) = cm[3].str().c_str();
+		std::cout << cm[1].str().c_str()
+			<< "->" << cm[2].str().c_str()
+			<< ": " << cm[3].str().c_str() << std::endl;
 	}
 	else
 	{

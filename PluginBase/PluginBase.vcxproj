@@ -131,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Definitions.h" />
+    <ClInclude Include="FlexVar.h" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="stdafx.h" />
@@ -138,6 +139,7 @@
     <ClInclude Include="Var.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FlexVar.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Plugin.cpp" />
     <ClCompile Include="stdafx.cpp">
