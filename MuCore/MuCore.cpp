@@ -28,8 +28,6 @@ CMuCore::CMuCore()
 	this->szProcListNames = ppChar2vpChar(szProc);
 	strcpy_s(this->m_szName, "MuCore");
 	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 0, 0);
-
-	this->Property("CliVersion") = "10701";
 }
 
 
@@ -49,14 +47,14 @@ PRESULT CMuCore::invoke(int proc, CVar * ArgList, int ArgCount)
 {
 	switch (proc)
 	{
-	case CALLBACK_INDEX(0):
+	case CALLBACK_INDEX(0): // On Connect
 		CALLBACK_CHKARG(ArgCount,2);
 		return this->OnConnect(ArgList[0], ArgList[1]);
-	case CALLBACK_INDEX(1):
+	case CALLBACK_INDEX(1): // On Packet
 		CALLBACK_CHKARG(ArgCount, 3);
 		this->OnData(ArgList[0], ArgList[1], ArgList[2]);
 		return P_OK;
-	case CALLBACK_INDEX(2):
+	case CALLBACK_INDEX(2): // On Disconnect
 		CALLBACK_CHKARG(ArgCount, 2);
 		return this->OnDisconnect(ArgList[0], ArgList[1]);
 	}
@@ -81,10 +79,9 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 {
 	if (iSize <= 0) return;
 
-	Packet<void> incoming;
-	CVar Args[3];
+	Packet<void> incoming(this);
+	CVar Args[7];
 	Args[0] = dwIndex;
-	Args[1] = incoming;
 	do
 	{
 		incoming = (BYTE*)Buffer;
@@ -96,8 +93,11 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 		}
 		Buffer += incoming.size();
 		iSize -= incoming.size();
+		Args[1] = incoming.body()+1;
 		Args[2] = incoming.size();
-		this->DispCallBack(0, Args, 3);
+		Args[3] = incoming.code();
+		Args[4] = incoming.encrypt();
+		this->DispCallBack(0, Args, 5);
 	} while (iSize > 0);
 }
 
@@ -125,7 +125,7 @@ struct PMSG_JOINRESULT
 // Envio de respuesta de union al servidor
 void CMuCore::SCPJoinResult(int iID, int result)
 {
-	Packet<PMSG_JOINRESULT> pack(0xC1);
+	Packet<PMSG_JOINRESULT> pack(this,0xC1);
 	pack->code = 0xF1;
 	pack->scode = 0;
 	pack->result = result;

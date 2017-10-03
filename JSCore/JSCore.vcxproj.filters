@@ -24,16 +24,16 @@
     <ClInclude Include="targetver.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="MuCore.h">
+    <ClInclude Include="JSCore.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Packet.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\SimpleModulus.h">
+    <ClInclude Include="..\Common\spe.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\spe.h">
+    <ClInclude Include="..\Shared\TCPClient.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,7 +41,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Archivos de código fuente</Filter>
     </ClCompile>
-    <ClCompile Include="MuCore.cpp">
+    <ClCompile Include="JSCore.cpp">
       <Filter>Archivos de código fuente</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
@@ -50,7 +50,7 @@
     <ClCompile Include="..\Common\Packet.cpp">
       <Filter>Archivos de código fuente</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\SimpleModulus.cpp">
+    <ClCompile Include="..\Shared\TCPClient.cpp">
       <Filter>Archivos de código fuente</Filter>
     </ClCompile>
   </ItemGroup>

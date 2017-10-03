@@ -59,10 +59,21 @@ PRESULT CPlugin::DispCallBack(unsigned int iCallBack, CVar * Args, int ArgsCount
 	{
 		_tagCBInfo &CBInfo = this->CallBacks[iCallBack][i];
 		pResult = CBInfo.pPlugin->invoke(CBInfo.Proc, Args, ArgsCount);
-		if(pResult != P_OK && pResult != P_NO_IMPLEMENT) return pResult;
+		if(pResult != P_NO_IMPLEMENT) return pResult;
 	}
 
 	return P_OK;
+}
+
+PRESULT CPlugin::DispCallBack(unsigned int iEvent, int ArgsCount, ...)
+{
+	CVar AList[10];
+	va_list ap;
+	va_start(ap, ArgsCount);
+	for (register int i = 0; i < min(ArgsCount, 10); i++) AList[i] = va_arg(ap, void*);
+	va_end(ap);
+
+	return this->DispCallBack(iEvent, AList, ArgsCount);
 }
 
 PRESULT CPlugin::UnregCallBacks(CPlugin * plg)

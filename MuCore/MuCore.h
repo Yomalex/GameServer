@@ -1,5 +1,5 @@
 #pragma once
-#include "Packet.h"
+#include "../Common/Packet.h"
 
 class CMuCore :
 	public CPlugin

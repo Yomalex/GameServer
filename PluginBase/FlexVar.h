@@ -19,4 +19,7 @@ struct FlexVar
 	operator long();
 	operator int();
 	operator short();
+	operator unsigned long() { return this->operator long(); }
+	operator unsigned int() { return this->operator int(); }
+	operator unsigned short() { return this->operator short(); }
 };

@@ -1,5 +1,9 @@
+// SimpleModulus.cpp: define las funciones exportadas de la aplicación DLL.
+//
+
 #include "stdafx.h"
 #include "SimpleModulus.h"
+
 CSimpleModulus g_SimpleModulusSC;
 CSimpleModulus g_SimpleModulusCS;
 DWORD CSimpleModulus::s_dwSaveLoadXOR[4] = { 0x3F08A79B, 0xE25CC287, 0x93D27AB9, 0x20DEA7BF };
@@ -26,7 +30,7 @@ int CSimpleModulus::Encrypt(void * lpDest, void * lpSource, int iSize) // Emulat
 	unsigned char * lpTempDest = (LPBYTE)lpDest;
 	unsigned char * lpTempSource = (LPBYTE)lpSource;
 	int iDec = ((iSize + 7) / 8);
-	iSize = (iDec + iDec * 4) * 2 + iDec;
+	iSize = 11 * iDec;// (iDec + iDec * 4) * 2 + iDec;
 	if (lpDest != NULL)
 	{
 		iOriSize = iTempSize;
@@ -236,7 +240,7 @@ BOOL CSimpleModulus::SaveKey(LPSTR lpszFileName, WORD wFileHeader, BOOL bSaveMod
 		return FALSE;
 	}
 	HeaderBuffer.sFileHeader = wFileHeader;
-	HeaderBuffer.dwSize = (bSaveModulus + bSaveEncKey + bSaveDecKey + bSaveXORKey) * sizeof(XORTable)+sizeof(ENCDEC_FILEHEADER);
+	HeaderBuffer.dwSize = (bSaveModulus + bSaveEncKey + bSaveDecKey + bSaveXORKey) * sizeof(XORTable) + sizeof(ENCDEC_FILEHEADER);
 	WriteFile(hFile, &HeaderBuffer, sizeof(ENCDEC_FILEHEADER), (ULONG*)&iSize, NULL);
 	if (bSaveModulus != FALSE)
 	{
@@ -285,7 +289,7 @@ BOOL CSimpleModulus::LoadKey(LPSTR lpszFileName, WORD wFileHeader, BOOL bLoadMod
 	}
 	if (HeaderBuffer.sFileHeader == wFileHeader)
 	{
-		if ((HeaderBuffer.dwSize) == (int)(((bLoadModulus + bLoadEncKey + bLoadDecKey + bLoadXORKey)*sizeof(XORTable)) + sizeof(ENCDEC_FILEHEADER)))
+		if ((HeaderBuffer.dwSize) == (int)(((bLoadModulus + bLoadEncKey + bLoadDecKey + bLoadXORKey) * sizeof(XORTable)) + sizeof(ENCDEC_FILEHEADER)))
 		{
 			if (bLoadModulus != FALSE)
 			{

@@ -8,11 +8,16 @@ FlexVar FlexVar::operator=(const char * szValue)
 	bool dot = false;
 	while((*szValue >= '0' && *szValue <= '9') || !dot && (*szValue == '.'))
 	{
-		szValue++;
 		dot |= *szValue == '.';
+		szValue++;
 	}
 
-	if (*szValue == 0)
+	if (
+		*szValue == 0 || 
+		*szValue == '\n' || 
+		*szValue == '\r' || 
+		*szValue == '\t' ||
+		*szValue == ' ')
 	{
 		this->dfContent = atof(this->szContent.c_str());
 	}

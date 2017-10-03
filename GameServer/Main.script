@@ -2,14 +2,37 @@
 ; sistema basado en plugins
 ; Developer: Camejo Yomar
 ; Fecha: 08/14/2017
-; 
+;
+; ----------------------------------- 
 ; Cargar el plugin para agregar funciones a la consola
 Container->Load('console.dll')
-CONSOLE->Message(7, 'CONSOLE', 'Inicializado el plugin de consola')
 ; Cargar el plugin para servidor TCP
-Container->Load('iocp.dll')              
-; Decirle al plugin que Escuche el puerto 27015
-IOCP->Listen(27015)
+Container->Load('iocp.dll')
 ; Cargar el plugin MuCore
 Container->Load('mucore.dll')
-MuCore->CliVersion = 100718
+MuCore->CliVersion = 10718
+MuCore->GameServerPort = 55901
+MuCore->GameServerCode = 0
+MuCore->GameServerName = GSPlugin
+; Cargar el SimpleModulus
+Container->Load('simplemodulus.dll')
+Modulus->LoadEncKey('../Data/Enc2.dat')
+Modulus->LoadDecKey('../Data/Dec1.dat')
+; ObjCore Administrador de Objetos
+Container->Load('objcore.dll')
+; JSCore Conexion con el JoinServer
+Container->Load('jscore.dll')
+JSCore->IP = 127.0.0.1
+JSCore->Port = 55970
+; DSCore Conexion con el DataServer        
+; Container->Load('dscore.dll')
+; DSCore->IP1 = 127.0.0.1
+; DSCore->Port1 = 55960
+; DSCore->IP2 = 127.0.0.1
+; DSCore->Port2 = 55962
+; Protocolo de comunicacion con el cliente
+; Actualmente Korean
+Container->Load('protocol.dll')              
+; Decirle al plugin 'IOCP' que Escuche el puerto 'MuCore->GameServerPort'
+IOCP->Listen(MuCore->GameServerPort)
+JSCore->JStart()

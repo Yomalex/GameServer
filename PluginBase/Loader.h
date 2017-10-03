@@ -53,7 +53,7 @@ public:
 private:
 	PRESULT Link(const char * szEvent, CPlugin * plg, int iCBIndex);
 	PRESULT Unlink(CPlugin * plg);
-	PRESULT FindAndLink(const char * szCallBack);
+	PRESULT FindAndLink(CPlugin * plg, int iEvent, const char * szCallBack);
 	PLUGIN_INFO* GetPluginInfo(const char * szPlugin);
 	PLUGIN_INFO* GetPluginInfo(HMODULE hModule);
 };

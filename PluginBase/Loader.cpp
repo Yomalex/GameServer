@@ -64,7 +64,7 @@ PRESULT CLoader::Load(const char * szFileName)
 		ei.szEvent = EventList[i];
 		ei.iEvent = i;
 		this->Events.push_back(ei);
-		this->FindAndLink(ei.szEvent);	// Buscar Eventos de escucha
+		this->FindAndLink(pInfo.pLink, i, ei.szEvent);	// Buscar Eventos de escucha
 										// en los plugins ya cargados
 	}
 
@@ -74,15 +74,16 @@ PRESULT CLoader::Load(const char * szFileName)
 
 PRESULT CLoader::Link(const char * szEvent, CPlugin * plg, int iCBIndex)
 {
+	PRESULT pRes = P_ERROR;
 	for (register UINT i = 0; i < this->Events.size(); i++)
 	{
 		if (!strcmp(szEvent, this->Events[i].szEvent))
 		{
 			this->GetPluginInfo(this->Events[i].szPlugin)->pLink->RegCallBack(this->Events[i].iEvent, plg, iCBIndex);
-			return P_OK;
+			pRes = P_OK;
 		}
 	}
-	return P_ERROR;
+	return pRes;
 }
 
 PRESULT CLoader::Unlink(CPlugin * plg)
@@ -94,14 +95,17 @@ PRESULT CLoader::Unlink(CPlugin * plg)
 	return P_OK;
 }
 
-PRESULT CLoader::FindAndLink(const char * szCallBack)
+PRESULT CLoader::FindAndLink(CPlugin * plg, int iEvent, const char * szCallBack)
 {
 	for (register UINT i = 0; i < this->Plugins.size(); i++)
 	{
 		for (register UINT j = 0; j < this->Plugins[i].CBacList.size(); j++)
 		{
 			if (strcmp(this->Plugins[i].CBacList[j], szCallBack) == 0)
-				this->Link(szCallBack, this->Plugins[i].pLink, j);
+			{
+				plg->RegCallBack(iEvent, this->Plugins[i].pLink, j);
+			}
+				//this->Link(szCallBack, this->Plugins[i].pLink, j);
 		}
 	}
 	return P_OK;
@@ -133,7 +137,7 @@ PRESULT CLoader::invoke(const char * szPlugin, const char * szFunction, int arg,
 	CVar AList[10];
 	va_list ap;
 	va_start(ap, arg);
-	for (register int i = 0; i < arg; i++) AList[i] = va_arg(ap, void*);
+	for (register int i = 0; i < min(arg, 10); i++) AList[i] = va_arg(ap, void*);
 	va_end(ap);
 	return this->invoke(szPlugin, szFunction, AList, arg);
 }
@@ -187,8 +191,9 @@ PRESULT CLoader::Free()
 }
 
 std::cmatch cm;
-std::regex e("(.+)(?:->)(.+)(?:\\()(.+)(?:\\))(?:\\s*)(?:;*)(?:\\s*)(.*)(?:\\n?)$");
+std::regex e("(.+)(?:->)(.+)(?:\\()(.*)(?:\\))(?:\\s*)(?:;*)(?:\\s*)(.*)(?:\\n?)$");
 std::regex var("(?:\\s*)(.[^\\s]+)->(.[^\\s]+)(?:\\s*)=(?:\\s*)(.+)(?:\\n*)$");
+std::regex val("(?:\\s*)(.[^\\s]+)->(.[^\\s]+)(?:\\s*)(?:\\n*)$");
 std::regex comment("(?:\\s?)(?:;)(?:\\s?)(.*)$(?:\\n?)");
 PRESULT CLoader::Command(const char * szLine)
 {
@@ -268,7 +273,22 @@ PRESULT CLoader::Command(const char * szLine)
 				}
 				else
 				{
-					Args[i] = (float)atof(argList[i].c_str());
+					if (
+						(argList[i][0] >='0' && argList[i][0] <= '9') || 
+						argList[i][0] == '+' || 
+						argList[i][0] == '-'
+						)
+					{
+						Args[i] = (float)atof(argList[i].c_str());
+					}
+					else
+					{
+						if (std::regex_match(argList[i].c_str(), cmArg, val))
+						{
+							FlexVar& fv = this->property(cmArg[1].str().c_str(), cmArg[2].str().c_str());
+							Args[i] = (short)fv;
+						}
+					}
 				}
 			}
 

@@ -14,6 +14,7 @@
 #define DEF_NAME Plugin
 
 #define PLUGIN_ENTRYPOINT(x) extern "C" __declspec(dllexport) x * DEF_NAME(){ return new x(); }
+#define PLUGIN_ERROR(x) 1900 | x
 #define CALLBACK_START_INDEX 1000
 #define CALLBACK_INDEX(x) (x+CALLBACK_START_INDEX)
 #define CALLBACK_CHKARG(x,y) if(x!=y) return P_INVALID_ARG
@@ -120,20 +121,23 @@ public:
 	PRESULT CallBackList(std::vector<char *> &names);
 	PRESULT RegCallBack(unsigned int iEvent, CPlugin * plg, int iCBIndex);
 	PRESULT DispCallBack(unsigned int iEvent, CVar * Args, int ArgsCount);
+	PRESULT DispCallBack(unsigned int iEvent, int ArgsCount, ...);
 	PRESULT UnregCallBacks(CPlugin * plg);
 	FlexVar& Property(const char * szProperty);
 	const char * GetPluginName() { return this->m_szName; }
 	unsigned long GetPluginVersion() { return this->m_dwVersion; }
 	const char * GetPluginVersionString() { return this->m_dwVersion; }
 	void Parent(CLoader* pLoader) { this->Loader = pLoader; };
-protected:
-	CLoader * Loader;
-	char m_szName[8];
-	PlgVer m_dwVersion;
+	CLoader * Parent() const { return this->Loader; }
+	int AddEvent(char * szEvent) { szEventListNames.push_back(szEvent); return szEventListNames.size() - 1; }
 
+protected:
 	std::vector<char *> szEventListNames;
 	std::vector<char *> szCallBackListNames;
 	std::vector<char *> szProcListNames;
+	CLoader * Loader;
+	char m_szName[8];
+	PlgVer m_dwVersion;
 
 	std::vector<std::vector<_tagCBInfo>> CallBacks;
 
