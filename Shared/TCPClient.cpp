@@ -7,13 +7,22 @@ int iETcp_Error;
 DWORD WINAPI thRead(TcpClient * tcp)
 {
 	int readed;
-	CVar Args[2];
-	Args[0] = tcp->Buffering;
+	CVar Args1[2];
+	CVar Args[5];
+	Args[0] = tcp->pDispacher->GetPluginName();
+	Args[4] = "";
+	Args1[0] = tcp->Buffering;
 	tcp->alive = true;
 	while ( (readed = recv(tcp->s, (char*)tcp->Buffering, ARRAYSIZE(tcp->Buffering), 0)) > 0 )
 	{
-		Args[1] = readed;
-		tcp->pDispacher->DispCallBack(1, Args, 2);
+		Args1[1] = readed;
+		if (tcp->pDispacher->DispCallBack(0, Args1, 2)!=P_OK)
+		{
+			Args[1] = __FILE__;
+			Args[2] = __LINE__;
+			Args[4] = "Callback cant be finded";
+			tcp->pDispacher->DispCallBack(iETcp_Error, Args, 5);
+		}
 	}
 	tcp->Disconnect();
 	return 0;

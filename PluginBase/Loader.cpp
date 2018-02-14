@@ -36,7 +36,8 @@ PRESULT CLoader::Load(const char * szFileName)
 
 	//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-	std::cout << " - Named: " << pInfo.Name << std::endl << " - Version: " << pInfo.pLink->GetPluginVersionString() << std::endl;
+	std::cout << " - Named: " << pInfo.Name << std::endl;
+	std::cout << " - Version: " << pInfo.pLink->GetPluginVersionString() << std::endl;
 
 	// Creando lista de funciones
 	pInfo.pLink->ProcList(pInfo.ProcList);
@@ -79,6 +80,7 @@ PRESULT CLoader::Link(const char * szEvent, CPlugin * plg, int iCBIndex)
 	{
 		if (!strcmp(szEvent, this->Events[i].szEvent))
 		{
+			std::cout << "Finded event for '" << szEvent << "' on: " << this->Events[i].szPlugin << std::endl;
 			this->GetPluginInfo(this->Events[i].szPlugin)->pLink->RegCallBack(this->Events[i].iEvent, plg, iCBIndex);
 			pRes = P_OK;
 		}
@@ -103,6 +105,7 @@ PRESULT CLoader::FindAndLink(CPlugin * plg, int iEvent, const char * szCallBack)
 		{
 			if (strcmp(this->Plugins[i].CBacList[j], szCallBack) == 0)
 			{
+				std::cout << "Finded event for '" << szCallBack << "' on: " << this->Plugins[i].pLink->GetPluginName() << std::endl;
 				plg->RegCallBack(iEvent, this->Plugins[i].pLink, j);
 			}
 				//this->Link(szCallBack, this->Plugins[i].pLink, j);

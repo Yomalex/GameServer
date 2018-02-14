@@ -13,7 +13,7 @@ class CObjCore :
 	//char szProperties[MAX_PROPERTIES][100];
 	//CVar cvObjects[65535][MAX_PROPERTIES];
 
-	std::map<CVar, std::string> cvObjects[MAX_OBJECTS];
+	std::map<std::string, CVar> cvObjects[MAX_OBJECTS];
 public:
 	CObjCore();
 	~CObjCore();

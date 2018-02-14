@@ -25,14 +25,17 @@ Container->Load('tda.jscore.dll')
 JSCore->IP = 127.0.0.1
 JSCore->Port = 55970
 ; DSCore Conexion con el DataServer        
-; Container->Load('tda.dscore.dll')
-; DSCore->IP1 = 127.0.0.1
-; DSCore->Port1 = 55960
-; DSCore->IP2 = 127.0.0.1
-; DSCore->Port2 = 55962
+Container->Load('tda.dscore.dll')
+DSCore->IP1 = 127.0.0.1
+DSCore->Port1 = 55960
+DSCore->IP2 = 127.0.0.1
+DSCore->Port2 = 55962
 ; Protocolo de comunicacion con el cliente
 ; Actualmente Korean
 Container->Load('tda.protocol.dll')              
 ; Decirle al plugin 'IOCP' que Escuche el puerto 'MuCore->GameServerPort'
 IOCP->Listen(MuCore->GameServerPort)
+; Decirle al plugin 'JSCore' que Conecte
 JSCore->JStart()
+; Decirle al plugin 'DSCore' que Conecte
+DSCore->DStart()

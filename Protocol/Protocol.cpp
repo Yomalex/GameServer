@@ -9,11 +9,13 @@ enum CallBacks
 {
 	_OnPacket = CALLBACK_START_INDEX,
 	_OnJSPacket,
+	_OnDSPacket,
 };
 
 char * szCallBack[] = {
 	"OnPacket",
 	"OnJSPacket",
+	"OnDSPacket",
 	nullptr
 };
 
@@ -32,6 +34,9 @@ CProtocol::CProtocol()
 {
 	strcpy_s(this->m_szName, "Protoco");
 	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 7, 0);
+
+	this->szCallBackListNames = ppChar2vpChar(szCallBack);
+	this->szEventListNames = ppChar2vpChar(szEvent);
 }
 
 CProtocol::~CProtocol()
@@ -61,6 +66,12 @@ PRESULT CProtocol::invoke(int proc, CVar * ArgList, int ArgCount)
 	case _OnJSPacket:
 		CALLBACK_CHKARG(ArgCount, 2);
 		if (this->OnJSPacket(ArgList[0], ArgList[1]))
+			return P_OK;
+		return P_NO_IMPLEMENT;
+
+	case _OnDSPacket:
+		CALLBACK_CHKARG(ArgCount, 2);
+		if (this->OnDSPacket(ArgList[0], ArgList[1]))
 			return P_OK;
 		return P_NO_IMPLEMENT;
 	}
@@ -116,7 +127,7 @@ bool CProtocol::OnJSPacket(char * bPacket, int Len)
 			PMSG_JOINRESULT * p = (PMSG_JOINRESULT*)bPacket;
 			printf("Connection to JS Result: %d\n", p->Result);
 		}
-			break;
+			return true;
 		case PCC_LOGIN:
 		{
 			PMSG_LOGINRESULT * p = (PMSG_LOGINRESULT *)bPacket;
@@ -130,7 +141,7 @@ bool CProtocol::OnJSPacket(char * bPacket, int Len)
 			OBJ_SET(p->Number, "ConStatus", 1); // Conectado
 			OBJ_SET(p->Number, "Type", 1); // Usuario
 		}
-			break;
+		return true;
 		default:
 		{
 			char szError[128];
@@ -139,5 +150,21 @@ bool CProtocol::OnJSPacket(char * bPacket, int Len)
 		}
 	}
 
+	return false;
+}
+
+bool CProtocol::OnDSPacket(char * Packet, int Len)
+{
+	PMMSG_BASE * mixed = (PMMSG_BASE *)Packet;
+
+	switch (mixed->Operation())
+	{
+	case PCC_JOINRESULT:
+	{
+		PMSG_JOINRESULT * p = (PMSG_JOINRESULT*)Packet;
+		printf("Connection to DS Result: %d\n", p->Result);
+	}
+	return true;
+	}
 	return false;
 }

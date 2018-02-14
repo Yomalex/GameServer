@@ -18,6 +18,7 @@ public:
 
 	bool OnPacket(DWORD dwID, char * Packet, int Len, BYTE Head, bool Encrypt);
 	bool OnJSPacket(char * Packet, int Len);
+	bool OnDSPacket(char * Packet, int Len);
 };
 
 enum PROTOCOL_CODE
