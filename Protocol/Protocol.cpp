@@ -58,7 +58,7 @@ PRESULT CProtocol::invoke(int proc, CVar * ArgList, int ArgCount)
 	switch (proc)
 	{
 	case _OnPacket:
-		CALLBACK_CHKARG(ArgCount, 3);
+		CALLBACK_CHKARG(ArgCount, 5);
 		if(this->OnPacket(ArgList[0], ArgList[1], ArgList[2], ArgList[3].operator int(), ArgList[4].operator int()))
 			return P_OK;
 		return P_NO_IMPLEMENT;

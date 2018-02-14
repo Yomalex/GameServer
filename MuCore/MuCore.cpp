@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MuCore.h"
 #include "../PluginBase/Loader.h"
+#include "../Shared/ConShared.h"
 
 
 char * szProc[] = {
@@ -13,6 +14,7 @@ char * szProc[] = {
 char * szEvents[] =
 {
 	"OnPacket", // Index, Packet, Len
+	"OnError",
 	nullptr
 };
 char * szCallBack[] = {
@@ -26,6 +28,7 @@ CMuCore::CMuCore()
 {
 	this->szCallBackListNames = ppChar2vpChar(szCallBack);
 	this->szProcListNames = ppChar2vpChar(szProc);
+	this->szEventListNames = ppChar2vpChar(szEvents);
 	strcpy_s(this->m_szName, "MuCore");
 	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 0, 0);
 }
@@ -71,7 +74,7 @@ PRESULT CMuCore::OnConnect(DWORD dwIndex, char * szIP)
 	char szMessage[1024];
 	sprintf_s(szMessage, "Connected %s on Index %d", szIP, dwIndex);
 	this->Loader->invoke("CONSOLE", "Message", 3, 7, this->m_szName, szMessage);
-	this->SCPJoinResult(dwIndex, 0);
+	this->SCPJoinResult(dwIndex, 1);
 	return P_OK;
 }
 
@@ -97,7 +100,11 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 		Args[2] = incoming.size();
 		Args[3] = incoming.code();
 		Args[4] = incoming.encrypt();
-		this->DispCallBack(0, Args, 5);
+		PRESULT p = this->DispCallBack(0, Args, 5);
+		if (p != P_OK)
+		{
+			Error(1, p, "");
+		}
 	} while (iSize > 0);
 }
 

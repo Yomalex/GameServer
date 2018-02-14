@@ -118,6 +118,7 @@ DWORD WINAPI th_Worker(CIocp * iocp)
 				Args[3] = m_dwLastError;
 				Args[4] = (void*)nullptr;
 				iocp->DispCallBack(3, Args, 5); //Dispatch OnError Event
+				iocp->Close(client->ID);
 				return 0;
 			}
 		}
