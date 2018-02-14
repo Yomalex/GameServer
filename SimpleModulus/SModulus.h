@@ -1,5 +1,7 @@
 #pragma once
 #include "..\PluginBase\Plugin.h"
+#include "..\Shared\ConShared.h"
+
 class CSModulus :
 	public CPlugin
 {

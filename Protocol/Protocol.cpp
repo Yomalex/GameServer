@@ -5,10 +5,21 @@
 #include "Protocol.h"
 #include "../Common/Packet.h"
 
+enum CallBacks
+{
+	_OnPacket = CALLBACK_START_INDEX,
+	_OnJSPacket,
+};
+
 char * szCallBack[] = {
 	"OnPacket",
 	"OnJSPacket",
 	nullptr
+};
+
+enum Events
+{
+	OnError,
 };
 
 char * szEvent[] = {
@@ -22,7 +33,6 @@ CProtocol::CProtocol()
 	strcpy_s(this->m_szName, "Protoco");
 	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 7, 0);
 }
-
 
 CProtocol::~CProtocol()
 {
@@ -42,13 +52,13 @@ PRESULT CProtocol::invoke(int proc, CVar * ArgList, int ArgCount)
 {
 	switch (proc)
 	{
-	case CALLBACK_INDEX(0):
+	case _OnPacket:
 		CALLBACK_CHKARG(ArgCount, 3);
 		if(this->OnPacket(ArgList[0], ArgList[1], ArgList[2], ArgList[3].operator int(), ArgList[4].operator int()))
 			return P_OK;
 		return P_NO_IMPLEMENT;
 
-	case CALLBACK_INDEX(1):
+	case _OnJSPacket:
 		CALLBACK_CHKARG(ArgCount, 2);
 		if (this->OnJSPacket(ArgList[0], ArgList[1]))
 			return P_OK;
@@ -64,19 +74,32 @@ PRESULT CProtocol::Stop()
 
 bool CProtocol::OnPacket(DWORD dwID, char * pBody, int Len, BYTE Head, bool Encrypt)
 {
+	PMMSG_BASE * pMixed = (PMMSG_BASE*)pBody;
 	switch (Head)
 	{
-	case PCTL_CODE:
-		switch ((BYTE)*pBody)
+		case PCTL_CODE:
+			switch (pMixed->Body()[0])
+			{
+			case PCC_LOGIN:
+			{
+				CLOGIN_INFO * pInfo = (CLOGIN_INFO*)pBody;
+				this->Loader->invoke("JSCore", "LoginRequest", 4, pInfo->AccountId, pInfo->Password, dwID, "127.0.0.1");
+			}
+			return true;
+			default:
+			{
+				char szError[128];
+				sprintf_s(szError, "No se encontro el sub comando %02X", pMixed->Body()[0]);
+				Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
+			}
+			}
+			break;
+		default:
 		{
-		case PCC_LOGIN:
-		{
-			CLOGIN_INFO * pInfo = (CLOGIN_INFO*)(pBody + 1);
-			this->Loader->invoke("JSCore", "LoginRequest", 4, pInfo->AccountId, pInfo->Password, dwID, "127.0.0.1");
+			char szError[128];
+			sprintf_s(szError, "No se encontro el comando %02X", Head);
+			Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
 		}
-		return true;
-		}
-		break;
 	}
 
 	return false;
@@ -88,30 +111,32 @@ bool CProtocol::OnJSPacket(char * bPacket, int Len)
 
 	switch (mixed->Operation())
 	{
-	case PCC_JOINRESULT:
-	{
-		PMSG_JOINRESULT * p = (PMSG_JOINRESULT*)bPacket;
-		printf("Connection to JS Result: %d\n", p->Result);
-	}
-		break;
-	case PCC_LOGIN:
-	{
-		PMSG_LOGINRESULT * p = (PMSG_LOGINRESULT *)bPacket;
-		Packet<PMSG_LINFORESULT> pack(this, 0xC1);
-		pack->Code = PCTL_CODE;
-		pack->SCode = PCC_LOGIN;
-		pack->Result = p->Result;
-		this->Loader->invoke("IOCP", "Send", 3, p->Number, (char*)pack, pack.size());
-		OBJ_SET(p->Number, "AccountID", p->AccountId);
-		OBJ_SET(p->Number, "JoominNumber", p->joominNumber);
-	}
-		break;
-	default:
-	{
-		char szError[128];
-		sprintf_s(szError, "OPCode: %02X Missing", mixed->Operation());
-		this->DispCallBack(0, 5, this->m_szName, __FILE__, __LINE__, PLUGIN_ERROR(P_NO_IMPLEMENT), szError);
-	}
+		case PCC_JOINRESULT:
+		{
+			PMSG_JOINRESULT * p = (PMSG_JOINRESULT*)bPacket;
+			printf("Connection to JS Result: %d\n", p->Result);
+		}
+			break;
+		case PCC_LOGIN:
+		{
+			PMSG_LOGINRESULT * p = (PMSG_LOGINRESULT *)bPacket;
+			Packet<PMSG_LINFORESULT> pack(this, 0xC1);
+			pack->Code = PCTL_CODE;
+			pack->SCode = PCC_LOGIN;
+			pack->Result = p->Result;
+			this->Loader->invoke("IOCP", "Send", 3, p->Number, (char*)pack, pack.size());
+			OBJ_SET(p->Number, "AccountID", p->AccountId);
+			OBJ_SET(p->Number, "JoominNumber", p->joominNumber);
+			OBJ_SET(p->Number, "ConStatus", 1); // Conectado
+			OBJ_SET(p->Number, "Type", 1); // Usuario
+		}
+			break;
+		default:
+		{
+			char szError[128];
+			sprintf_s(szError, "OPCode: %02X Missing", mixed->Operation());
+			Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
+		}
 	}
 
 	return false;

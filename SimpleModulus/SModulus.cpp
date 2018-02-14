@@ -63,14 +63,7 @@ void CSModulus::LoadEncKey(LPSTR lpszFileName)
 {
 	if (!g_SimpleModulusSC.LoadEncryptionKey(lpszFileName))
 	{
-		CVar Args[5];
-		Args[0] = this->m_szName;
-		Args[1] = __FILE__;
-		Args[2] = __LINE__;
-		Args[3] = PLUGIN_ERROR(P_INVALID_ARG);
-		Args[4] = "Un argumento es invalido";
-
-		this->DispCallBack(0, Args, 5);
+		Error(0, PLUGIN_ERROR(P_INVALID_ARG), "Un argumento es invalido");
 	}
 }
 
@@ -78,14 +71,7 @@ void CSModulus::LoadDecKey(LPSTR lpszFileName)
 {
 	if (!g_SimpleModulusCS.LoadDecryptionKey(lpszFileName))
 	{
-		CVar Args[5];
-		Args[0] = this->m_szName;
-		Args[1] = __FILE__;
-		Args[2] = __LINE__;
-		Args[3] = PLUGIN_ERROR(P_INVALID_ARG);
-		Args[4] = "Un argumento es invalido";
-
-		this->DispCallBack(0, Args, 5);
+		Error(0, PLUGIN_ERROR(P_INVALID_ARG), "Un argumento es invalido");
 	}
 }
 
@@ -93,14 +79,7 @@ PRESULT CSModulus::Encrypt(void * lpDest, void * lpSource, int * iSize)
 {
 	if (iSize == nullptr || lpDest == nullptr || lpSource == nullptr)
 	{
-		CVar Args[5];
-		Args[0] = this->m_szName;
-		Args[1] = __FILE__;
-		Args[2] = __LINE__;
-		Args[3] = PLUGIN_ERROR(P_INVALID_ARG);
-		Args[4] = "Un argumento es invalido";
-
-		this->DispCallBack(0, Args, 5);
+		Error(0, PLUGIN_ERROR(P_INVALID_ARG), "Un argumento es invalido");
 		return P_INVALID_ARG;
 	}
 		
@@ -114,14 +93,7 @@ PRESULT CSModulus::Decrypt(void * lpDest, void * lpSource, int * iSize)
 {
 	if (iSize == nullptr || lpDest == nullptr || lpSource == nullptr)
 	{
-		CVar Args[5];
-		Args[0] = this->m_szName;
-		Args[1] = __FILE__;
-		Args[2] = __LINE__;
-		Args[3] = PLUGIN_ERROR(P_INVALID_ARG);
-		Args[4] = "Un argumento es invalido";
-
-		this->DispCallBack(0, Args, 5);
+		Error(0, PLUGIN_ERROR(P_INVALID_ARG), "Un argumento es invalido");
 		return P_INVALID_ARG;
 	}
 

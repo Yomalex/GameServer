@@ -5,34 +5,34 @@
 ;
 ; ----------------------------------- 
 ; Cargar el plugin para agregar funciones a la consola
-Container->Load('console.dll')
+Container->Load('tda.console.dll')
 ; Cargar el plugin para servidor TCP
-Container->Load('iocp.dll')
+Container->Load('tda.iocp.dll')
 ; Cargar el plugin MuCore
-Container->Load('mucore.dll')
+Container->Load('tda.mucore.dll')
 MuCore->CliVersion = 10718
 MuCore->GameServerPort = 55901
 MuCore->GameServerCode = 0
 MuCore->GameServerName = GSPlugin
 ; Cargar el SimpleModulus
-Container->Load('simplemodulus.dll')
+Container->Load('tda.simplemodulus.dll')
 Modulus->LoadEncKey('../Data/Enc2.dat')
 Modulus->LoadDecKey('../Data/Dec1.dat')
 ; ObjCore Administrador de Objetos
-Container->Load('objcore.dll')
+Container->Load('tda.objcore.dll')
 ; JSCore Conexion con el JoinServer
-Container->Load('jscore.dll')
+Container->Load('tda.jscore.dll')
 JSCore->IP = 127.0.0.1
 JSCore->Port = 55970
 ; DSCore Conexion con el DataServer        
-; Container->Load('dscore.dll')
+; Container->Load('tda.dscore.dll')
 ; DSCore->IP1 = 127.0.0.1
 ; DSCore->Port1 = 55960
 ; DSCore->IP2 = 127.0.0.1
 ; DSCore->Port2 = 55962
 ; Protocolo de comunicacion con el cliente
 ; Actualmente Korean
-Container->Load('protocol.dll')              
+Container->Load('tda.protocol.dll')              
 ; Decirle al plugin 'IOCP' que Escuche el puerto 'MuCore->GameServerPort'
 IOCP->Listen(MuCore->GameServerPort)
 JSCore->JStart()

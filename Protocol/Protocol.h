@@ -1,7 +1,8 @@
 #pragma once
-#include "C:\Users\Yomar\Documents\GitHub\GameServer\PluginBase\Plugin.h"
+#include "..\PluginBase\Plugin.h"
 #include "../Shared/Protocol.h"
 #include "../Shared/ObjShared.h"
+#include "../Shared/ConShared.h"
 
 class CProtocol :
 	public CPlugin
@@ -25,7 +26,9 @@ enum PROTOCOL_CODE
 };
 enum PCTLCODE_SCODE
 {
+	// Packet Control Code, Join Result
 	PCC_JOINRESULT,
+	// Packet Control Code, Login
 	PCC_LOGIN,
 };
 enum LOGIN_RESULTS // PCTLCODE_SCODE::LOGIN
@@ -50,7 +53,7 @@ struct PMSG_JOINRESULT : PBMSG_BASE
 	BYTE Result;
 	DWORD ItemCount;
 };
-struct CLOGIN_INFO
+struct CLOGIN_INFO : PBMSG_BASE
 {
 	char AccountId[10];
 	char Password[10];

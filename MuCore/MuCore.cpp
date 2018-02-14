@@ -91,9 +91,9 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 			this->Loader->invoke("IOCP", "Close", 1, dwIndex);
 			return;
 		}
+		Args[1] = Buffer;
 		Buffer += incoming.size();
 		iSize -= incoming.size();
-		Args[1] = incoming.body()+1;
 		Args[2] = incoming.size();
 		Args[3] = incoming.code();
 		Args[4] = incoming.encrypt();

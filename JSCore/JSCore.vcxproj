@@ -71,6 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>tda.$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -178,6 +179,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MuCore\MuCore.vcxproj">
+      <Project>{e4e3b472-dafc-4ab3-9c3d-037389007459}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\PluginBase\PluginBase.vcxproj">
       <Project>{b3ee126d-7c32-49f9-a849-c58ed9bd0e5c}</Project>
     </ProjectReference>
