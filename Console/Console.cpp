@@ -53,6 +53,8 @@ PRESULT CConsole::Start()
 	}
 
 	SetConsoleTitleA("Console");
+	this->STD_OUT = GetStdHandle(STD_OUTPUT_HANDLE);
+	this->STD_IN = GetStdHandle(STD_INPUT_HANDLE);
 
 	hThread = CreateThread(nullptr, NULL, (LPTHREAD_START_ROUTINE)th_ConsoleInput, this, 0, nullptr);
 
@@ -108,29 +110,38 @@ void CConsole::OnError(const char * szPlugin, const char * szFile, unsigned int 
 		file.erase(file.begin(), file.begin() + backslash + 1);
 	}
 	EnterCriticalSection(&csConsole);
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);// White
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_Gray);// White
 	HelperAddTime();
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_White);
 	std::cout << "[";
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_Red);
 	std::cout << "Error ";
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_Gray);
 	std::cout << szPlugin;
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);// White
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_White);// White
 	std::cout << "] Number: " << ErrorNo;
 	//printf("%s_%s (%d) Error(%d)", szPlugin, file.c_str(), Line, ErrorNo);
 	if (szErrString) std::cout << " Message: " << szErrString << std::endl;
 	else std::cout << std::endl;
 
-	HelperAddTime();
-	std::cout << "[Debug] File:" << file << " Line:" << Line << std::endl;
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_Gray);
+	std::cout << "                     [Debug] File:" << file << " Line:" << Line << std::endl;
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_White);// White
 	LeaveCriticalSection(&csConsole);
 }
 
 void CConsole::Message(DWORD dwAttr, const char * szPlugin, const char * szMessage)
 {
 	EnterCriticalSection(&csConsole);
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), dwAttr);
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_Gray);
 	HelperAddTime();
-	std::cout << "[Message "<< szPlugin << "] " << szMessage << std::endl;
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_White);// White
+	std::cout << "[Message ";
+	std::cout << szPlugin;
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_White);// White
+	std::cout << "] ";
+	SetConsoleTextAttribute(this->STD_OUT, dwAttr);
+	std::cout << szMessage << std::endl;
+	SetConsoleTextAttribute(this->STD_OUT, ConColors::Con_White);// White
 	LeaveCriticalSection(&csConsole);
 }

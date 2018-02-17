@@ -1,5 +1,7 @@
 #pragma once
 #include "..\PluginBase\Plugin.h"
+#include "../shared/ConShared.h"
+
 class CConsole :
 	public CPlugin
 {
@@ -20,5 +22,6 @@ public:
 private:
 	HANDLE hThread;
 	CRITICAL_SECTION csConsole;
+	HANDLE STD_OUT, STD_IN;
 };
 

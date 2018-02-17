@@ -89,7 +89,7 @@ bool CProtocol::OnPacket(DWORD dwID, char * pBody, int Len, BYTE Head, bool Encr
 	PMMSG_BASE * pMixed = (PMMSG_BASE*)pBody;
 	char szError[128];
 	sprintf_s(szError, "Packet %02X:%02X:%02X:%02X", pMixed->bHead.Head, Len, pMixed->Operation(), pMixed->Body()[0]);
-	Message(7, szError);
+	Msg(ConColors::Con_White, szError);
 	switch (Head)
 	{
 		case PCTL_CODE:

@@ -95,3 +95,8 @@ void CJSCore::LoginRequest(const char * ID, const char * PW, unsigned short Numb
 
 	this->Connection->Write(pack, pack.size());
 }
+
+DWORD CJSCore::ThConnect(VOID * lpVoid)
+{
+
+}
