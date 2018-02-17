@@ -4,10 +4,12 @@
 #include "stdafx.h"
 #include "JSCore.h"
 #include "../PluginBase/Loader.h"
+#include "../Shared/ConShared.h"
 
 char * szEvents[] =
 {
 	"OnJSPacket", // Packet, Len
+	"OnError",
 	nullptr
 };
 
@@ -18,6 +20,8 @@ char * szProc[] =
 	nullptr
 };
 
+CJSCore * CJSCore::instance;
+
 
 CJSCore::CJSCore()
 {
@@ -27,6 +31,7 @@ CJSCore::CJSCore()
 
 	this->m_dwVersion = PLUGIN_MAKEVERSION(0, 99, 0, 0);
 	this->Connection = new TcpClient(this);
+	this->instance = this;
 }
 
 
@@ -59,27 +64,13 @@ PRESULT CJSCore::invoke(int proc, CVar * ArgList, int ArgCount)
 
 PRESULT CJSCore::Stop()
 {
+	TerminateThread(hThread, 0);
 	return P_OK;
 }
 
 void CJSCore::JStart(void)
 {
-	char szIP[100];
-	WORD Port = this->Property("Port");
-	strcpy_s(szIP, this->Property("IP"));
-	if (this->Connection->Connect(szIP, Port))
-	{
-		puts("Join Server Alive");
-	}
-	else puts("Join Server Dead");
-
-	Packet<PMSG_JOIN> pack(this,0xC1);
-	pack->OP = 0;
-	pack->Type = 1;
-	pack->Port = (short)this->Loader->property("MuCore", "GameServerPort");
-	strcpy_s(pack->Name, this->Loader->property("MuCore", "GameServerName"));
-	pack->Code = (short)this->Loader->property("MuCore", "GameServerCode");
-	this->Connection->Write(pack, pack.size());
+	hThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)CJSCore::ThConnect, nullptr, 0, nullptr);
 }
 
 void CJSCore::LoginRequest(const char * ID, const char * PW, unsigned short Number, const char * UserIP)
@@ -98,5 +89,30 @@ void CJSCore::LoginRequest(const char * ID, const char * PW, unsigned short Numb
 
 DWORD CJSCore::ThConnect(VOID * lpVoid)
 {
+	char szIP[100];
+	while ( true )
+	{
+		WORD Port = instance->Property("Port");
+		strcpy_s(szIP, instance->Property("IP"));
+		while (!instance->Connection->Connect(szIP, Port))
+		{
+			Sleep(5000);
+		}
 
+
+		Packet<PMSG_JOIN> pack(instance, 0xC1);
+		pack->OP = 0;
+		pack->Type = 1;
+		pack->Port = (short)instance->Loader->property("MuCore", "GameServerPort");
+		strcpy_s(pack->Name, instance->Loader->property("MuCore", "GameServerName"));
+		pack->Code = (short)instance->Loader->property("MuCore", "GameServerCode");
+		instance->Connection->Write(pack, pack.size());
+
+		while (instance->Connection->isConnected())
+		{
+			Sleep(1000);
+		}
+
+		Msg2(instance, ConColors::Con_Red, "Connection with JoinServer Lost");
+	}
 }

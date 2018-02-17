@@ -9,6 +9,8 @@ class CJSCore :
 	public CPlugin
 {
 	TcpClient * Connection;
+	static CJSCore * instance;
+	HANDLE hThread;
 public:
 	CJSCore();
 	~CJSCore();
@@ -20,6 +22,8 @@ public:
 
 	void JStart(void);
 	void LoginRequest(const char * ID, const char * PW, unsigned short Number, const char * UserIP);
+
+	static DWORD ThConnect(VOID * lpVoid);
 };
 
 // Protocol
