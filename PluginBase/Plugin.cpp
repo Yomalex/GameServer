@@ -62,7 +62,7 @@ PRESULT CPlugin::DispCallBack(unsigned int iCallBack, CVar * Args, int ArgsCount
 		if(pResult != P_NO_IMPLEMENT) return pResult;
 	}
 
-	return P_OK;
+	return P_NO_IMPLEMENT;
 }
 
 PRESULT CPlugin::DispCallBack(unsigned int iEvent, int ArgsCount, ...)

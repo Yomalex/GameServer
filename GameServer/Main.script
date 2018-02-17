@@ -10,7 +10,7 @@ Container->Load('tda.console.dll')
 Container->Load('tda.iocp.dll')
 ; Cargar el plugin MuCore
 Container->Load('tda.mucore.dll')
-MuCore->CliVersion = 10718
+MuCore->CliVersion = 10635
 MuCore->GameServerPort = 55901
 MuCore->GameServerCode = 0
 MuCore->GameServerName = GSPlugin

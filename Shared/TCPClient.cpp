@@ -58,7 +58,7 @@ bool TcpClient::Connect(const char * szDN, WORD Port)
 	int Trys = 3;
 	CVar Args[5];
 	Args[0] = this->pDispacher->GetPluginName();
-	Args[4] = "";
+	Args[4] = (void*)nullptr;
 
 	while ( connect(this->s, (sockaddr*)&target, sizeof(target)) == SOCKET_ERROR)
 	{

@@ -3,6 +3,7 @@
 #include "../Shared/Protocol.h"
 #include "../Shared/ObjShared.h"
 #include "../Shared/ConShared.h"
+#include "../Shared/IoShared.h"
 
 class CProtocol :
 	public CPlugin
@@ -23,7 +24,10 @@ public:
 
 enum PROTOCOL_CODE
 {
-	PCTL_CODE = 0xF1
+	PCTL_CODE = 0xF1,
+	PCTL_,
+	PCTL_CLIEN_DATA,
+	PCTL_LIVECLIENT = 0x0E,
 };
 enum PCTLCODE_SCODE
 {
@@ -49,13 +53,9 @@ enum LOGIN_RESULTS // PCTLCODE_SCODE::LOGIN
 };
 
 #pragma pack(push,1)
-struct PMSG_JOINRESULT : PBMSG_BASE
-{
-	BYTE Result;
-	DWORD ItemCount;
-};
 struct CLOGIN_INFO : PBMSG_BASE
 {
+	BYTE SH;
 	char AccountId[10];
 	char Password[10];
 	DWORD dwTickCount;
@@ -64,7 +64,7 @@ struct CLOGIN_INFO : PBMSG_BASE
 struct PMSG_LOGINRESULT : PBMSG_BASE
 {
 	BYTE Result;
-	DWORD Number;
+	WORD Number;
 	char AccountId[10];
 	int JSNumber;
 	int DB;
@@ -87,5 +87,78 @@ struct PMSG_LINFORESULT // Clase packet
 		R_MAX_TRYS,
 		R_BILL_MISSING,
 	};
+};
+struct SDHP_CHARLIST
+{
+	BYTE Index;	// 0
+	char Name[10];	// 1
+	BYTE Padding; // B
+	WORD Level;	// C
+	BYTE Class;	// E
+	BYTE CtlCode;	// F
+	BYTE dbInventory[48];	// 10
+	BYTE DbVersion;	// 40
+	BYTE btGuildStatus;	// 41
+};
+struct SDHP_CHARLISTCOUNT : PWMSG_BASE
+{
+	short Number;	// 4
+	BYTE Count;	// 6
+	BYTE Padding;//7
+	int DbNumber;	// 8
+	BYTE Magumsa;	// C
+	char AccountId[11];	// D
+	BYTE MoveCnt;	// 18
+#ifdef EXPINV
+	BYTE ExpandedWarehouse;
+#endif
+	BYTE Padding2[3];
+	SDHP_CHARLIST CharList[1];
+};
+
+/* * * * * * * * * * * * * * * * * * * * *
+*	Mu Char List Count Packet
+*	Direction : GameServer -> Client
+*  Code     : 0xC1
+*	HeadCode : 0xF3
+*	SubCode  : 0x00
+*	BASE PACKET - Complete with PMSG_CHARLIST
+*/
+
+struct PMSG_CHARLIST
+{
+	BYTE Index;	// 0
+	char Name[10];	// 1
+	WORD Level;	// C
+	BYTE CtlCode;	// E
+	BYTE CharSet[CHAR_SET_SIZE];	// F
+	BYTE btGuildStatus;	// 21
+};
+
+struct PMSG_CHARLISTCOUNT
+{
+	//WZ_HEAD_B h;
+	BYTE OP;
+	BYTE subcode;
+	BYTE MaxClass;	// 4
+	BYTE MoveCnt;	// 5
+	BYTE Count;	// 6
+	PMSG_CHARLIST CharList[5];
+};
+
+struct PMSG_CHARLIST_ENABLE_CREATION
+{
+	//WZ_HEAD_B h; // C1:DE:00
+	BYTE OP;
+	BYTE subcode; // 0
+	BYTE EnableClass;// 4
+};
+
+struct PMSG_SERVERTIME_SEND
+{
+	//PBMSG_HEAD2 h; //C1:LEN:FA:02:SYSTEMTIME
+	BYTE OP;
+	BYTE subcode;
+	SYSTEMTIME Time;
 };
 #pragma pack(pop)

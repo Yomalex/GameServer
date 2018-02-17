@@ -5,6 +5,7 @@
 #include "../PluginBase/Loader.h"
 #include "Console.h"
 #include <iostream>
+#include <time.h>
 
 char * szCallBacks[] = {
 	"OnError",
@@ -33,11 +34,14 @@ CConsole::CConsole()
 	this->szProcListNames = ppChar2vpChar(szProcList);
 	strcpy_s(this->m_szName, "CONSOLE");
 	this->m_dwVersion = PLUGIN_MAKEVERSION(1, 0, 0, 0);
+
+	InitializeCriticalSection(&csConsole);
 }
 
 
 CConsole::~CConsole()
 {
+	DeleteCriticalSection(&csConsole);
 }
 
 PRESULT CConsole::Start()
@@ -78,9 +82,20 @@ PRESULT CConsole::Stop()
 	return P_OK;
 }
 
+void HelperAddTime()
+{
+	time_t t;
+	tm tim;
+	time(&t);
+	localtime_s(&tim, &t);
+
+	std::cout.width(2);
+	std::cout << tim.tm_mon + 1 << "/" << tim.tm_mday << "/" << tim.tm_year + 1900 << " - ";
+	std::cout << tim.tm_hour << ":" << tim.tm_min << ":" << tim.tm_sec << " ";
+}
+
 void CConsole::OnError(const char * szPlugin, const char * szFile, unsigned int Line, DWORD ErrorNo, const char * szErrString)
 {
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
 
 	std::string file(szFile);
 	size_t backslash = file.rfind('/');
@@ -92,13 +107,30 @@ void CConsole::OnError(const char * szPlugin, const char * szFile, unsigned int 
 	{
 		file.erase(file.begin(), file.begin() + backslash + 1);
 	}
-	printf("%s_%s (%d) Error(%d)", szPlugin, file.c_str(), Line, ErrorNo);
-	if (szErrString) std::cout << szErrString << std::endl;
+	EnterCriticalSection(&csConsole);
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);// White
+	HelperAddTime();
+	std::cout << "[";
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_INTENSITY);
+	std::cout << "Error ";
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+	std::cout << szPlugin;
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);// White
+	std::cout << "] Number: " << ErrorNo;
+	//printf("%s_%s (%d) Error(%d)", szPlugin, file.c_str(), Line, ErrorNo);
+	if (szErrString) std::cout << " Message: " << szErrString << std::endl;
 	else std::cout << std::endl;
+
+	HelperAddTime();
+	std::cout << "[Debug] File:" << file << " Line:" << Line << std::endl;
+	LeaveCriticalSection(&csConsole);
 }
 
 void CConsole::Message(DWORD dwAttr, const char * szPlugin, const char * szMessage)
 {
+	EnterCriticalSection(&csConsole);
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), dwAttr);
-	std::cout << szPlugin << ": " << szMessage << std::endl;
+	HelperAddTime();
+	std::cout << "[Message "<< szPlugin << "] " << szMessage << std::endl;
+	LeaveCriticalSection(&csConsole);
 }

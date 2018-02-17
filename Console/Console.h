@@ -19,5 +19,6 @@ public:
 	friend DWORD WINAPI th_ConsoleInput(CConsole * con);
 private:
 	HANDLE hThread;
+	CRITICAL_SECTION csConsole;
 };
 

@@ -5,6 +5,7 @@
 #include "MuCore.h"
 #include "../PluginBase/Loader.h"
 #include "../Shared/ConShared.h"
+#include "../Shared/ObjShared.h"
 
 
 char * szProc[] = {
@@ -74,6 +75,8 @@ PRESULT CMuCore::OnConnect(DWORD dwIndex, char * szIP)
 	char szMessage[1024];
 	sprintf_s(szMessage, "Connected %s on Index %d", szIP, dwIndex);
 	this->Loader->invoke("CONSOLE", "Message", 3, 7, this->m_szName, szMessage);
+	OBJ_SET(dwIndex, "Serial_Out", 0);
+	OBJ_SET(dwIndex, "Serial_In", 0);
 	this->SCPJoinResult(dwIndex, 1);
 	return P_OK;
 }
@@ -82,7 +85,7 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 {
 	if (iSize <= 0) return;
 
-	Packet<void> incoming(this);
+	Packet<void*> incoming(this);
 	CVar Args[7];
 	Args[0] = dwIndex;
 	do
@@ -94,9 +97,9 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 			this->Loader->invoke("IOCP", "Close", 1, dwIndex);
 			return;
 		}
-		Args[1] = Buffer;
-		Buffer += incoming.size();
-		iSize -= incoming.size();
+		Args[1] = (void*)incoming;
+		Buffer += incoming.SizeRaw;
+		iSize -= incoming.SizeRaw;
 		Args[2] = incoming.size();
 		Args[3] = incoming.code();
 		Args[4] = incoming.encrypt();
@@ -104,6 +107,7 @@ void CMuCore::OnData(DWORD dwIndex, char * Buffer, int iSize)
 		if (p != P_OK)
 		{
 			Error(1, p, "");
+			this->Loader->invoke("IOCP", "Close", 1, dwIndex);
 		}
 	} while (iSize > 0);
 }
@@ -113,6 +117,12 @@ PRESULT CMuCore::OnDisconnect(DWORD dwIndex, DWORD dwLifeTime)
 	char szMessage[1024];
 	sprintf_s(szMessage, "Disonnected %d was alive %fseg", dwIndex, (float)dwLifeTime/1000.0f);
 	this->Loader->invoke("CONSOLE", "Message", 3, 7, this->m_szName, szMessage);
+	CVar value;
+	Obj_GET(dwIndex, "ConStatus", &value);
+	if (value.operator int() == 1)
+	{
+		// JS Disc
+	}
 	return P_OK;
 }
 

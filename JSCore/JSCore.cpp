@@ -90,4 +90,8 @@ void CJSCore::LoginRequest(const char * ID, const char * PW, unsigned short Numb
 	memcpy(pack->Password, PW, MAX_ACCPW);
 	pack->Number = Number;
 	memcpy(pack->UserIP, UserIP, 17);
+
+	printf_s("[JS] Login request for (%d)\n", pack->Number);
+
+	this->Connection->Write(pack, pack.size());
 }

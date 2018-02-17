@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "Protocol.h"
 #include "../Common/Packet.h"
+#include "CCharSet.h"
 
 enum CallBacks
 {
@@ -86,29 +87,48 @@ PRESULT CProtocol::Stop()
 bool CProtocol::OnPacket(DWORD dwID, char * pBody, int Len, BYTE Head, bool Encrypt)
 {
 	PMMSG_BASE * pMixed = (PMMSG_BASE*)pBody;
+	char szError[128];
+	sprintf_s(szError, "Packet %02X:%02X:%02X:%02X", pMixed->bHead.Head, Len, pMixed->Operation(), pMixed->Body()[0]);
+	Message(7, szError);
 	switch (Head)
 	{
 		case PCTL_CODE:
 			switch (pMixed->Body()[0])
 			{
-			case PCC_LOGIN:
-			{
-				CLOGIN_INFO * pInfo = (CLOGIN_INFO*)pBody;
-				this->Loader->invoke("JSCore", "LoginRequest", 4, pInfo->AccountId, pInfo->Password, dwID, "127.0.0.1");
-			}
-			return true;
-			default:
-			{
-				char szError[128];
-				sprintf_s(szError, "No se encontro el sub comando %02X", pMixed->Body()[0]);
-				Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
-			}
+				case PCC_LOGIN:
+				{
+					CLOGIN_INFO * pInfo = (CLOGIN_INFO*)pBody;
+					this->Loader->invoke("JSCore", "LoginRequest", 4, pInfo->AccountId, pInfo->Password, dwID, "127.0.0.1");
+				}
+				return true;
+				default:
+				{
+					sprintf_s(szError, "No se encontro el sub comando %02X:%02X Size:%d", pMixed->Operation(), pMixed->Body()[0], Len);
+					Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
+				}
 			}
 			break;
+		case PCTL_LIVECLIENT:
+			return true;
+		case PCTL_CLIEN_DATA:
+			switch (pMixed->Body()[0])
+			{
+			case 0x00:
+				this->Loader->invoke("DSCore", "DataServerGetCharListRequest", 1, dwID);
+				break;
+			/*case 0x01:
+				break;*/
+			default:
+				{
+					sprintf_s(szError, "No se encontro el sub comando %02X:%02X Size:%d", pMixed->Operation(), pMixed->Body()[0], Len);
+					Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
+				}
+				return false;
+			}
+			return true;
 		default:
 		{
-			char szError[128];
-			sprintf_s(szError, "No se encontro el comando %02X", Head);
+			sprintf_s(szError, "No se encontro el comando %02X, Size:%d", Head, Len);
 			Error(OnError, PLUGIN_ERROR(P_INVALID_ARG), szError);
 		}
 	}
@@ -135,11 +155,18 @@ bool CProtocol::OnJSPacket(char * bPacket, int Len)
 			pack->Code = PCTL_CODE;
 			pack->SCode = PCC_LOGIN;
 			pack->Result = p->Result;
+			if (pack->Result == 1 || pack->Result == 15)
+			{
+				OBJ_SET(p->Number, "AccountID", p->AccountId);
+				OBJ_SET(p->Number, "JoominNumber", p->joominNumber);
+				OBJ_SET(p->Number, "ConStatus", 1); // Conectado
+				OBJ_SET(p->Number, "Type", 1); // Usuario
+			}
+			else if (pack->Result == 0)
+			{
+				pack->Result = 2;
+			}
 			this->Loader->invoke("IOCP", "Send", 3, p->Number, (char*)pack, pack.size());
-			OBJ_SET(p->Number, "AccountID", p->AccountId);
-			OBJ_SET(p->Number, "JoominNumber", p->joominNumber);
-			OBJ_SET(p->Number, "ConStatus", 1); // Conectado
-			OBJ_SET(p->Number, "Type", 1); // Usuario
 		}
 		return true;
 		default:
@@ -153,18 +180,61 @@ bool CProtocol::OnJSPacket(char * bPacket, int Len)
 	return false;
 }
 
-bool CProtocol::OnDSPacket(char * Packet, int Len)
+bool CProtocol::OnDSPacket(char * Stream, int Len)
 {
-	PMMSG_BASE * mixed = (PMMSG_BASE *)Packet;
+	PMMSG_BASE * mixed = (PMMSG_BASE *)Stream;
 
 	switch (mixed->Operation())
 	{
-	case PCC_JOINRESULT:
+	case 1:
 	{
-		PMSG_JOINRESULT * p = (PMSG_JOINRESULT*)Packet;
-		printf("Connection to DS Result: %d\n", p->Result);
+		SDHP_CHARLISTCOUNT * pList = (SDHP_CHARLISTCOUNT*)Stream;
+
+		Packet<PMSG_CHARLISTCOUNT> pack(this, 0xC1);
+		pack->OP = 0xF3;
+		pack->subcode = 0;
+		pack->Count = pList->Count;
+		OBJ_SET(pList->Number, "Magumsa", pList->Magumsa);
+		pack->MaxClass = pList->Magumsa + 3;
+		pack->MoveCnt = pList->MoveCnt;
+
+		Packet<PMSG_CHARLIST_ENABLE_CREATION> pack2(this, 0xC1);
+		pack2->OP = 0xDE;
+		pack2->subcode = 0;
+		pack2->EnableClass = 4;
+
+		Send(pList->Number, pack2, pack2.size());
+
+		CCharSet cs;
+		for (UINT i =0; i < pList->Count; i++)
+		{
+			cs.ProcessInventory4(pList->CharList[i].dbInventory);
+			cs.SetServerClass(pList->CharList[i].Class);
+			pack->CharList[i].Index = pList->CharList[i].Index;
+			pack->CharList[i].Level = pList->CharList[i].Level;
+			pack->CharList[i].CtlCode = pList->CharList[i].CtlCode;
+			pack->CharList[i].btGuildStatus = pList->CharList[i].btGuildStatus;
+			memcpy(pack->CharList[i].Name, pList->CharList[i].Name, sizeof(pack->CharList[i].Name));
+			memcpy(pack->CharList[i].CharSet, cs.SmallInventory, sizeof(pack->CharList[i].CharSet));
+		}
+
+		Send(pList->Number, pack, pack.size() - (5 - pList->Count)*sizeof(PMSG_CHARLIST));
+
+		Packet<PMSG_SERVERTIME_SEND> pack3(this, 0xC3);
+		pack3->OP = 0xFA;
+		pack3->subcode = 0x02;
+		GetSystemTime(&pack3->Time);
+
+		CVar ret;
+		Obj_GET(pList->Number, "Serial_Out", &ret);
+		pack3.Serial = (int)ret;
+
+		Send(pList->Number, pack3, pack3.size());
+		OBJ_SET(pList->Number, "Serial_Out", pack3.Serial+1);
+	}
+	break;
+	default:
+		return false;
 	}
 	return true;
-	}
-	return false;
 }

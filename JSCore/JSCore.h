@@ -37,7 +37,7 @@ struct LoginReq
 {
 	BYTE OP;
 	char AccountId[MAX_ACCPW];
-	char Password[MAX_ACCPW];
+	char Password[MAX_ACCPW+1];
 	WORD Number;
 	char UserIP[17];
 };
